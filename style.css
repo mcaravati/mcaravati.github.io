@@ -1,0 +1,132 @@
+#generate-button, #export-button, #import-button {
+    align-items: center;
+    background-color: #4f545c;
+    color: white;
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
+    width: auto;
+    margin: 1vh;
+}
+
+#generate-button {
+    grid-area: generate-button;
+}
+
+#export-button {
+    grid-area: export-button;
+}
+
+#import-button {
+    grid-area: import-button;
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+html {
+    font-family: ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+}
+
+input {
+    margin: 1vh;
+}
+
+body {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    height: 100vh;
+    margin: 0;
+}
+
+section {
+    background-color: #2f3136;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    padding: 1vw;
+    width: 25vw;
+}
+
+main {
+    align-items: center;
+    background-color: #36393f;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    width: 75vw;
+}
+
+h3 {
+    color:white;
+    grid-area: title;
+    text-align: center;
+}
+
+label {
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.generation-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+    grid-template-areas:
+        "title title"
+        "import-button import-button"
+        "width-label width-input"
+        "height-label height-input"
+        "generate-button generate-button"
+        "background-label background-picker"
+        "cell-label cell-picker"
+        "export-button export-button";
+}
+
+#width-input-box {
+    grid-area: width-input;
+}
+
+#height-input-box {
+    grid-area: height-input;
+}
+
+.generation-section > label {
+    margin: 1vh;
+}
+
+input[type="color"] {
+    width: auto;
+}
+
+#cell-picker {
+    grid-area: cell-picker;
+}
+
+#background-picker {
+    grid-area: background-picker;
+}
+
+label[for="width-input-box"] {
+    grid-area: width-label;
+}
+
+label[for="height-input-box"] {
+    grid-area: height-label;
+}
+
+label[for="cell-picker"] {
+    grid-area: cell-label;
+}
+
+label[for="background-picker"] {
+    grid-area: background-label;
+}

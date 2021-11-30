@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Sandwich Grid Editor</title>
+</head>
+
+<body>
+    <section>
+        <div class="generation-section">
+            <h3>Generation</h3>
+
+            <div id="import-button">Import</div>
+
+            <label for="width-input-box">Width</label>
+            <input type="text" id="width-input-box" value="40" required>
+
+            <label for="height-input-box">Height</label>
+            <input type="text" id="height-input-box" value="30" required>
+
+            <div id="generate-button">Submit</div>
+
+            <label for="background-color">Background color</label>
+            <input type="color" id="background-color" value="#000000">
+
+            <label for="cell-color">Current color</label>
+            <input type="color" id="cell-color" value="#ffffff">
+
+            <div id="export-button">Export</div>
+        </div>
+    </section>
+
+    <main id="wrapper" draggable="false">
+    </main>
+
+    <script src="./index.js"></script>
+</body>
+
+</html>
