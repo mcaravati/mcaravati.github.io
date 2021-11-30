@@ -5,6 +5,7 @@ let IS_MOUSE_DOWN = false;
 // Thank you Erick Petrucelli (https://stackoverflow.com/a/3627747)
 const rgb2hex = (rgb) => {
     const hexArray = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/).slice(1).map(n => parseInt(n, 10).toString(16).padStart(2, '0'));
+
     const tmp = hexArray[0];
     hexArray[0] = hexArray[2];
     hexArray[2] = tmp;
@@ -104,7 +105,12 @@ function handleExportButtonClick(height, width) {
 }
 
 
-
+/**
+ * Converts a integer used by Sandwich to a hex string
+ * 
+ * @param {str} text A string containing a integer representing a color
+ * @returns A hex string preceded by a #
+ */
 function sandwichIntToHex(text) {
     const hexString = parseInt(text).toString(16).padStart(6, 0);
 
@@ -113,15 +119,6 @@ function sandwichIntToHex(text) {
         , hexString.substr(0, 2)].join('');
 }
 
-function removeItem(array, item) {
-    var i = array.length;
-
-    while (i--) {
-        if (array[i] === item) {
-            array.splice(array.indexOf(item), 1);
-        }
-    }
-}
 
 function processInputFile(text) {
     const textArray = text.split('\n');
@@ -136,7 +133,6 @@ function processInputFile(text) {
 
     const mainDiv = document.getElementsByTagName("main")[0];
     const pixelsRowsWrapper = document.getElementById("wrapper");
-
 
     GRID = [];
     const height = newArray.length;
@@ -165,6 +161,33 @@ function processInputFile(text) {
     }
 }
 
+function handleImportationButtonClick() {
+    // Check if file upload APIs are supported
+    if (window.File && window.FileReader && window.FileList && window.Blob) {
+        function handleFileSelect(evt) {
+            var file = evt.target.files[0];
+            file.text().then((value) => processInputFile(value));
+        }
+
+        // Create an invisible file upload button
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.style.display = "none";
+
+        document.body.appendChild(fileInput);
+
+        // Add an event listener and trigger it
+        fileInput.addEventListener('change', handleFileSelect, false);
+        fileInput.click();
+    } else {
+        // Alert the user
+        alert("Votre navigateur ne suporte pas les APIs nécessaires");
+    }
+}
+
+/**
+ * Main function
+ */
 function main() {
     const generateButton = document.getElementById("generate-button");
     const importButton = document.getElementById("import-button");
@@ -176,35 +199,19 @@ function main() {
     let height = 0;
     let width = 0;
 
+    // Handle events used to color the cells
     document.addEventListener("mousedown", () => IS_MOUSE_DOWN = true);
     document.addEventListener("mouseup", () => IS_MOUSE_DOWN = false);
 
+    // Handle grid generation
     generateButton.addEventListener("click", () => {
         height = parseInt(heightInput.value);
         width = parseInt(widthInput.value);
         handleGenerateButtonClick(height, width);
     });
 
-    importButton.addEventListener("click", () => {
-        if (window.File && window.FileReader && window.FileList && window.Blob) {
-            function handleFileSelect(evt) {
-                var file = evt.target.files[0];
-                file.text().then((value) => processInputFile(value));
-            }
-
-            const fileInput = document.createElement("input");
-            fileInput.type = "file";
-            fileInput.style.display = "none";
-
-            document.body.appendChild(fileInput);
-
-            fileInput.addEventListener('change', handleFileSelect, false);
-            fileInput.click();
-        } else {
-            alert("Votre navigateur ne suporte pas les APIs nécessaires");
-        }
-    });
-
+    // Handle file importation and grid exportation
+    importButton.addEventListener("click", () => handleImportationButtonClick());
     exportButton.addEventListener("click", () => handleExportButtonClick(height, width));
 }
 
