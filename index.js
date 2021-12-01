@@ -257,7 +257,11 @@ function main() {
 
     // Handle file importation and grid exportation
     importButton.addEventListener("click", () => handleImportationButtonClick());
-    exportButton.addEventListener("click", () => handleExportButtonClick(height, width));
+    exportButton.addEventListener("click", () => {
+        height = parseInt(heightInput.value);
+        width = parseInt(widthInput.value);
+        handleExportButtonClick(height, width);
+    });
 }
 
 main();
