@@ -85,10 +85,11 @@ label {
         "import-button import-button"
         "width-label width-input"
         "height-label height-input"
-        "generate-button generate-button"
         "background-label background-picker"
+        "generate-button generate-button"
         "cell-label cell-picker"
-        "export-button export-button";
+        "export-button export-button"
+        "error-message error-message";
 }
 
 #width-input-box {
@@ -129,4 +130,10 @@ label[for="cell-picker"] {
 
 label[for="background-picker"] {
     grid-area: background-label;
+}
+
+#error-message {
+    grid-area: error-message;
+    color: red;
+    text-align: center;
 }

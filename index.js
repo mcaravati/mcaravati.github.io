@@ -1,4 +1,6 @@
 const COLOR_PICKER = document.getElementById("cell-color");
+const ERROR_FIELD = document.getElementById("error-message");
+
 let GRID = [];
 let IS_MOUSE_DOWN = false;
 
@@ -12,6 +14,7 @@ const rgb2hex = (rgb) => {
 
     return `0x${hexArray.join('')}`
 }
+
 
 /**
  * Pixel class
@@ -32,7 +35,6 @@ class Pixel {
             event.preventDefault();
         });
 
-
         this.dom.addEventListener("click", () => this.changeColor());
         this.dom.addEventListener("mouseover", () => {
             if (IS_MOUSE_DOWN) this.changeColor();
@@ -44,35 +46,15 @@ class Pixel {
     }
 }
 
-function handleGenerateButtonClick(height, width) {
-    GRID = [];
 
-    const pixelsRowsWrapper = document.getElementById("wrapper");
-    const mainDiv = document.getElementsByTagName("main")[0];
+function handleGenerateButtonClick(height, width) {
     const backgroundColorPicker = document.getElementById("background-color");
 
-    // Calculate pixel size
-    const max = (height > width) ? height : width;
-    const pixelSize = mainDiv.clientHeight / max;
-
-    // Empty the wrapper
-    pixelsRowsWrapper.innerHTML = "";
-
-    for (let row = 0; row < height; row++) {
-        GRID[row] = new Array(width).fill(undefined);
-
-        const currentArray = document.createElement("div");
-        currentArray.className = "row";
-
-        for (let column = 0; column < width; column++) {
-            const pixel = new Pixel(document.createElement("div"), pixelSize, backgroundColorPicker.value);
-            GRID[row][column] = pixel;
-            currentArray.appendChild(pixel.dom);
-        }
-
-        pixelsRowsWrapper.appendChild(currentArray);
-    }
+    generateAndFillGrid(height, width, function (row, column) {
+        return backgroundColorPicker.value;
+    });
 }
+
 
 function generateFileAndSave(buffer) {
     const blob = new Blob([buffer], { type: "text/plain;charset=utf-8" });
@@ -90,6 +72,7 @@ function generateFileAndSave(buffer) {
         window.URL.revokeObjectURL(url);
     }, 0);
 }
+
 
 function handleExportButtonClick(height, width) {
     let buffer = "";
@@ -120,23 +103,42 @@ function sandwichIntToHex(text) {
 }
 
 
-function processInputFile(text) {
+function preprocessInput(text) {
+    function deleteRow(arr, row) {
+        arr = arr.slice(0); // make copy
+        arr.splice(row - 1, 1);
+        return arr;
+    }
+
     const textArray = text.split('\n');
     const newArray = new Array(textArray.length - 1);
 
+    let currentSize = 0;
+
     textArray.forEach((row, index) => {
-        if (index != newArray.length) {
-            const result = row.trim().split(" ");
-            newArray[index] = result;
+        if (row.length > currentSize) {
+            currentSize = row.length;
+        }
+
+        const result = row.trim().split(" ");
+        newArray[index] = result;
+    });
+
+    newArray.forEach((row, index) => {
+        if (row.length != currentSize) {
+            deleteRow(newArray, index);
         }
     });
 
-    const mainDiv = document.getElementsByTagName("main")[0];
-    const pixelsRowsWrapper = document.getElementById("wrapper");
+    return newArray;
+}
 
+
+function generateAndFillGrid(height, width, cellFiller) {
     GRID = [];
-    const height = newArray.length;
-    const width = newArray[0].length;
+
+    const pixelsRowsWrapper = document.getElementById("wrapper");
+    const mainDiv = document.getElementsByTagName("main")[0];
 
     // Calculate pixel size
     const max = (height > width) ? height : width;
@@ -152,7 +154,7 @@ function processInputFile(text) {
         currentArray.className = "row";
 
         for (let column = 0; column < width; column++) {
-            const pixel = new Pixel(document.createElement("div"), pixelSize, sandwichIntToHex(newArray[row][column]));
+            const pixel = new Pixel(document.createElement("div"), pixelSize, cellFiller(row, column));
             GRID[row][column] = pixel;
             currentArray.appendChild(pixel.dom);
         }
@@ -161,38 +163,44 @@ function processInputFile(text) {
     }
 }
 
-function handleImportationButtonClick() {
+
+function processInputFile(text) {
+    const dataArray = preprocessInput(text);
+
+    const height = newArray.length;
+    const width = newArray[0].length;
+
+    generateAndFillGrid(height, width, function (row, column) {
+        return dataArray[row][column];
+    });
+}
+
+
+async function handleImportationButtonClick() {
     // Check if file upload APIs are supported
     if (window.File && window.FileReader && window.FileList && window.Blob) {
-        function handleFileSelect(evt) {
-            var file = evt.target.files[0];
-            file.text().then((value) => processInputFile(value));
+        [fileHandle] = await window.showOpenFilePicker();
+
+        if (fileHandle.kind === 'file') {
+          console.log({fileHandle});
         }
-
-        // Create an invisible file upload button
-        const fileInput = document.createElement("input");
-        fileInput.type = "file";
-        fileInput.style.display = "none";
-
-        document.body.appendChild(fileInput);
-
-        // Add an event listener and trigger it
-        fileInput.addEventListener('change', handleFileSelect, false);
-        fileInput.click();
     } else {
         // Alert the user
         alert("Votre navigateur ne suporte pas les APIs nécessaires");
     }
 }
 
+
 /**
  * Main function
  */
 function main() {
+    // Find main buttons
     const generateButton = document.getElementById("generate-button");
     const importButton = document.getElementById("import-button");
     const exportButton = document.getElementById("export-button");
 
+    // Find input boxes
     const widthInput = document.getElementById("width-input-box");
     const heightInput = document.getElementById("height-input-box");
 
@@ -211,7 +219,7 @@ function main() {
     });
 
     // Handle file importation and grid exportation
-    importButton.addEventListener("click", () => handleImportationButtonClick());
+    importButton.addEventListener("click", async () => await handleImportationButtonClick());
     exportButton.addEventListener("click", () => handleExportButtonClick(height, width));
 }
 
