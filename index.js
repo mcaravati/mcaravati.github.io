@@ -111,24 +111,32 @@ function preprocessInput(text) {
     }
 
     const textArray = text.split('\n');
-    const newArray = new Array(textArray.length - 1);
+    let newArray = new Array(textArray.length - 1);
 
     let currentSize = 0;
 
     textArray.forEach((row, index) => {
-        if (row.length > currentSize) {
-            currentSize = row.length;
-        }
-
         const result = row.trim().split(" ");
         newArray[index] = result;
     });
 
-    newArray.forEach((row, index) => {
-        if (row.length != currentSize) {
-            deleteRow(newArray, index);
+    newArray.forEach((row) => {
+        if (row.length > currentSize) {
+            currentSize = row.length;
         }
     });
+
+    let iterator = 0;
+    let running = true;
+
+    while (iterator < newArray.length && running) {
+        let row = newArray[iterator];
+        if (row.length != currentSize) {
+            newArray = deleteRow(newArray, iterator + 1);
+            running = false;
+        }
+        iterator++;
+    }
 
     return newArray;
 }
@@ -167,23 +175,52 @@ function generateAndFillGrid(height, width, cellFiller) {
 function processInputFile(text) {
     const dataArray = preprocessInput(text);
 
-    const height = newArray.length;
-    const width = newArray[0].length;
+    const height = dataArray.length;
+    const width = dataArray[0].length;
 
     generateAndFillGrid(height, width, function (row, column) {
-        return dataArray[row][column];
+        return sandwichIntToHex(dataArray[row][column]);
     });
 }
 
 
-async function handleImportationButtonClick() {
+function handleImportationButtonClick() {
     // Check if file upload APIs are supported
     if (window.File && window.FileReader && window.FileList && window.Blob) {
-        [fileHandle] = await window.showOpenFilePicker();
+        function handleFileSelect(evt) {
+            const file = evt.target.files[0];
+            const reader = new FileReader();
 
-        if (fileHandle.kind === 'file') {
-          console.log({fileHandle});
+            reader.onload = function (e) {
+                if (e.target.result) {
+                    processInputFile(e.target.result);
+                } else {
+                    ERROR_FIELD.innerHTML = "Impossible de lire le fichier. Essayez d'utiliser un autre navigateur";
+                    setTimeout(function () {
+                        ERROR_FIELD.innerHTML = "";
+                    }, 5000);
+                }
+            }
+
+            if (file) {
+                reader.readAsText(file);
+            }
         }
+
+        // Create an invisible file upload button
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.style.display = "none";
+
+        document.body.appendChild(fileInput);
+
+        // Add an event listener and trigger it
+        fileInput.addEventListener('change', handleFileSelect, false);
+        fileInput.click();
+
+        // setTimeout(function () {
+        //     document.body.removeChild(fileInput);
+        // }, 0);
     } else {
         // Alert the user
         alert("Votre navigateur ne suporte pas les APIs nécessaires");
@@ -219,7 +256,7 @@ function main() {
     });
 
     // Handle file importation and grid exportation
-    importButton.addEventListener("click", async () => await handleImportationButtonClick());
+    importButton.addEventListener("click", () => handleImportationButtonClick());
     exportButton.addEventListener("click", () => handleExportButtonClick(height, width));
 }
 
