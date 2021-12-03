@@ -46,7 +46,11 @@ class Pixel {
     }
 }
 
-
+/**
+ * Generates a grid from the selected color
+ * @param {int} height The grid's height
+ * @param {int} width The grid's width
+ */
 function handleGenerateButtonClick(height, width) {
     const backgroundColorPicker = document.getElementById("background-color");
 
@@ -56,6 +60,10 @@ function handleGenerateButtonClick(height, width) {
 }
 
 
+/**
+ * Opens a prompt allowing the user to download the file
+ * @param {str} buffer The generated file content
+ */
 function generateFileAndSave(buffer) {
     const blob = new Blob([buffer], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -67,13 +75,18 @@ function generateFileAndSave(buffer) {
     document.body.appendChild(downloadLink);
     downloadLink.click();
 
+    // Remove the element
     setTimeout(function () {
         document.body.removeChild(downloadLink);
         window.URL.revokeObjectURL(url);
     }, 0);
 }
 
-
+/**
+ * Exports the current grid to a string
+ * @param {int} height The grid's height
+ * @param {int} width The grid's width
+ */
 function handleExportButtonClick(height, width) {
     let buffer = "";
 
@@ -102,10 +115,13 @@ function sandwichIntToHex(text) {
         , hexString.substr(0, 2)].join('');
 }
 
-
+/**
+ * Parses an imported file's content
+ * @param {str} text An imported file's content
+ */
 function preprocessInput(text) {
     function deleteRow(arr, row) {
-        arr = arr.slice(0); // make copy
+        arr = arr.slice(0); // Make copy
         arr.splice(row - 1, 1);
         return arr;
     }
@@ -120,6 +136,7 @@ function preprocessInput(text) {
         newArray[index] = result;
     });
 
+    // Find normal line size
     newArray.forEach((row) => {
         if (row.length > currentSize) {
             currentSize = row.length;
@@ -129,6 +146,7 @@ function preprocessInput(text) {
     let iterator = 0;
     let running = true;
 
+    // Remove parasites
     while (iterator < newArray.length && running) {
         let row = newArray[iterator];
         if (row.length != currentSize) {
@@ -141,7 +159,12 @@ function preprocessInput(text) {
     return newArray;
 }
 
-
+/**
+ * Generates and displays a grid
+ * @param {int} height The height of the grid
+ * @param {int} width The width of the grid
+ * @param {function(int row, int column)} cellFiller 
+ */
 function generateAndFillGrid(height, width, cellFiller) {
     GRID = [];
 
@@ -172,6 +195,10 @@ function generateAndFillGrid(height, width, cellFiller) {
 }
 
 
+/**
+ * Generates a grid from an imported file
+ * @param {str} text The content of a file
+ */
 function processInputFile(text) {
     const dataArray = preprocessInput(text);
 
@@ -183,7 +210,9 @@ function processInputFile(text) {
     });
 }
 
-
+/**
+ * Open a file picker to import and read a file
+ */
 function handleImportationButtonClick() {
     // Check if file upload APIs are supported
     if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -191,6 +220,7 @@ function handleImportationButtonClick() {
             const file = evt.target.files[0];
             const reader = new FileReader();
 
+            // Read the imported file
             reader.onload = function (e) {
                 if (e.target.result) {
                     processInputFile(e.target.result);
@@ -202,6 +232,7 @@ function handleImportationButtonClick() {
                 }
             }
 
+            // Do not execute the function if the fil is empty
             if (file) {
                 reader.readAsText(file);
             }
