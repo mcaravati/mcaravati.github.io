@@ -1,4 +1,4 @@
-#generate-button, #export-button, #import-button {
+#generate-button, #export-button, #import-button, #color-picker {
     align-items: center;
     background-color: #4f545c;
     color: white;
@@ -88,6 +88,7 @@ label {
         "background-label background-picker"
         "generate-button generate-button"
         "cell-label cell-picker"
+        "color-picker color-picker"
         "export-button export-button"
         "error-message error-message";
 }
@@ -136,4 +137,8 @@ label[for="background-picker"] {
     grid-area: error-message;
     color: red;
     text-align: center;
+}
+
+#color-picker {
+    grid-area: color-picker;
 }

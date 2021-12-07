@@ -3,6 +3,8 @@ const ERROR_FIELD = document.getElementById("error-message");
 
 let GRID = [];
 let IS_MOUSE_DOWN = false;
+let IS_PICKING_COLOR = false;
+
 
 // Thank you Erick Petrucelli (https://stackoverflow.com/a/3627747)
 const rgb2hex = (rgb) => {
@@ -35,7 +37,16 @@ class Pixel {
             event.preventDefault();
         });
 
-        this.dom.addEventListener("click", () => this.changeColor());
+        this.dom.addEventListener("click", () => {
+            // If the user is color picking
+            if (IS_PICKING_COLOR) {
+                const rgb = this.dom.style.backgroundColor;
+                COLOR_PICKER.value = '#' + rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/).slice(1).map(n => parseInt(n, 10).toString(16).padStart(2, '0')).join('');
+                IS_PICKING_COLOR = false;
+            } else {
+                this.changeColor();
+            }
+        });
         this.dom.addEventListener("mouseover", () => {
             if (IS_MOUSE_DOWN) this.changeColor();
         });
@@ -249,9 +260,10 @@ function handleImportationButtonClick() {
         fileInput.addEventListener('change', handleFileSelect, false);
         fileInput.click();
 
-        // setTimeout(function () {
-        //     document.body.removeChild(fileInput);
-        // }, 0);
+        // Remove the element
+        setTimeout(function () {
+            document.body.removeChild(fileInput);
+        }, 0);
     } else {
         // Alert the user
         alert("Votre navigateur ne suporte pas les APIs nécessaires");
@@ -267,6 +279,7 @@ function main() {
     const generateButton = document.getElementById("generate-button");
     const importButton = document.getElementById("import-button");
     const exportButton = document.getElementById("export-button");
+    const colorPicker = document.getElementById("color-picker");
 
     // Find input boxes
     const widthInput = document.getElementById("width-input-box");
@@ -278,6 +291,8 @@ function main() {
     // Handle events used to color the cells
     document.addEventListener("mousedown", () => IS_MOUSE_DOWN = true);
     document.addEventListener("mouseup", () => IS_MOUSE_DOWN = false);
+
+    colorPicker.addEventListener("click", () => IS_PICKING_COLOR = true);
 
     // Handle grid generation
     generateButton.addEventListener("click", () => {
