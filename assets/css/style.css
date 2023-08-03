@@ -1,0 +1,43 @@
+html, body {
+    margin: 0;
+    overflow-wrap: break-word;
+    font-family: "Commit Mono";
+}
+
+body {
+    width: 42rem;
+    margin: 0 auto;
+    padding: 4rem 2rem;
+}
+
+main {
+    margin: 2rem 0;
+}
+
+@font-face {
+    font-family: "Commit Mono";
+    src: url("/assets/fonts/CommitMono-450-Regular.otf");
+    font-weight: 450;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Commit Mono";
+    src: url("/assets/fonts/CommitMono-700-Regular.otf");
+    font-weight: 700;
+    font-style: bold;
+}
+
+@font-face {
+    font-family: "Commit Mono";
+    src: url("/assets/fonts/CommitMono-450-Italic.otf");
+    font-weight: 450;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: "Commit Mono";
+    src: url("/assets/fonts/CommitMono-700-Italic.otf");
+    font-weight: 700;
+    font-style: italic;
+}
