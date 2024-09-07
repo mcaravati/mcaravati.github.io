@@ -1,7 +1,11 @@
-html, body {
+html,
+body {
+    --background-color: white;
+    background-color: var(--background-color);
     margin: 0;
     overflow-wrap: break-word;
     font-family: "Commit Mono";
+    text-justify: newspaper;
 }
 
 body {
@@ -40,4 +44,47 @@ main {
     src: url("/assets/fonts/CommitMono-700-Italic.otf");
     font-weight: 700;
     font-style: italic;
+}
+
+.document {
+    --stripes-color: rgba(0, 0, 0, 0.2);
+
+    display: flex;
+    align-items: center;
+    width: fit-content;
+    padding: 1em 2em;
+    border: 3.5px solid black;
+    font-weight: bold;
+
+    background-image: repeating-linear-gradient(
+        -45deg,
+        var(--stripes-color),
+        var(--stripes-color) 3.5px,
+        transparent 3.5px,
+        transparent 10px
+    );
+
+    color: black;
+    transition-duration: 0.4s;
+    margin-right: 1em;
+}
+
+.document:hover {
+    background-image: none;
+    background-color: var(--stripes-color);
+}
+
+.document > img {
+    height: 2em;
+    width: auto;
+    margin-right: 1em;
+}
+
+.shadowed {
+    box-shadow: 0.5em 0.75em 0 0 rgba(0, 0, 0, 0.2);
+}
+
+nav {
+    display: flex;
+    justify-content: center;
 }
