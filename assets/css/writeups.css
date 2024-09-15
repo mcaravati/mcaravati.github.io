@@ -1,0 +1,33 @@
+figure {
+    margin: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h2 {
+    margin-bottom: 1rem;
+}
+
+h6 {
+    margin-top: 0;
+}
+
+section {
+    display: flex;
+}
+
+@media (max-width: 512px) {
+    section {
+        flex-direction: column;
+    }
+
+    figure {
+        width: 100%;
+        margin: 0;
+    }
+
+    figure > img {
+        width: 100%;
+    }
+}

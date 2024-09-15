@@ -8,14 +8,28 @@ figure {
     width: 300px;
 }
 
-figcaption { 
-    padding-top: 1em;
-    text-align: center;
-}
-
 #work-docs > ul {
     padding: 0;
     list-style: none;
     display: flex;
+    flex-wrap: wrap;
 }
 
+#work-docs li {
+    margin-bottom: 1.2em;
+}
+
+@media (max-width: 1024px) {
+    figure {
+        float: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        margin: 0;
+    }
+
+    figure > img {
+        width: 250px;
+    }
+  }

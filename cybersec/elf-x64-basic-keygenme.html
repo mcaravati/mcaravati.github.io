@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/writeups.css">
+    <link rel="stylesheet" href="/assets/css/cybersec/elf-x64-basic-keygenme.css">
+    <title>About - Caravati's website</title>
+</head>
+
+<body>
+    <header>
+        <h1><u>Caravati's website</u></h1>
+        <h5>Still looking for a subtitle that does not suck</h5>
+    </header>
+
+    <main>
+        <section>
+            <div>
+                <h2>ELF x64 - Basic KeygenMe</h2>
+                <h6>This post is part of <a href="/cybersec/about-root-me.html">the Root-Me series</a></h6>
+
+                <p>
+                    Welcome to this writeup ! It is the first time I'm doing that, so it may be a bit disorganized.
+                </p>
+                <p>
+                    Anyway, today's subject is a simple keygenme built for the x86_64 architecture, in the form of a stripped ELF:
+                </p>
+                <code class="code-block">$> file ch36.bin
+ch36.bin: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, stripped</code>
+                
+                <p>From what we disassembled of the first function (Figure 1), we can see that the program execute 3 system calls: one write (<code>MOV eax, 0x1</code>), one read (<code>MOV eax, 0x0</code>, saving what's read in the buffer at address <code>0x600260</code>) and one open (<code>MOV eax, 0x2</code>).</p>
+                <p>Wait, an open ? Let's take a look at what it tries to open:</p>
+
+                <code class="code-block">$> strace ./ch36.bin 
+execve("./ch36.bin", ["./ch36.bin"], 0x7fffc5ce5870 /* 89 vars */) = 0
+write(1, "[!] x64 NASM Keygen-Me\n[A] root-"..., 50[!] x64 NASM Keygen-Me
+[A] root-me   
+[?] Login : ) = 50
+read(0, This is my input
+"This is my input\n", 32)       = 17
+open(".m.key", O_RDONLY)                = -1 ENOENT (No such file or directory)</code>
+
+                <p>If you aren't familiar with it, <code>strace</code> allows to trace system calls and signals executed by the binary: here it seems that it tries to open a file called <code>.m.key</code>. For now let's forget that and proceed further.</p>
+            </div>
+            <figure>
+                <img alt="Graph view of the crackme's decompiled `main` function" src="/assets/images/cybersec/elf-x64-basic-keygenme/start.svg" class="shadowed bordered" />
+                <figcaption>Figure 1</figcaption>
+            </figure>
+        </section>
+
+        <p>The program then checks if the system call returned a -2, which is an error code for our system call.</p>
+        <p>Let's take a look at the block we jump to if the check fails: we have another read, which seems to save the content of the opened file in a buffer at address <code>0x600280</code>. Then, this buffer and the one storing our input get passed to some obscure function (Figure 2).</p>
+
+        <figure>
+            <img alt="Graph view of the crackme's first subfunction" src="/assets/images/cybersec/elf-x64-basic-keygenme/subfunction01.svg" class="shadowed bordered" />
+            <figcaption>Figure 2</figcaption>
+        </figure>
+
+        <p>At the beginning of this subfunction, we can see that another function is called (Figure 3), with the same arguments: this one is simple so we won't spend a lot of time on it: it is just a simple implementation of <code>strlen</code>.</p>
+
+        <section>
+            <figure>
+                <img alt="Graph view of the crackme's strlen implementation" src="/assets/images/cybersec/elf-x64-basic-keygenme/strlen.svg" class="shadowed bordered" />
+                <figcaption>Figure 3</figcaption>
+            </figure>
+
+            <div>
+                <p>Once that the length of our input has been computed, we enter a loop that seems to compare our input with the content of the <code>.m.key</code> file, but with a twist.</p>
+                <p>See the biggest chunk of the function ? It seems to translate to this logic:</p>
+
+                <code class="code-block">edx = 0
+eax = 0
+for rcx in range(rbx):
+    edx = user_input[rcx]
+    edx = edx | (file_content[rcx] << 8)
+    eax = (eax & 0xff00) | ((edx & 0xff) - (ecx & 0xff) + 0x14)
+
+    if (eax & 0xff) != ((edx & 0xff00) >> 8):
+        # Break, jump failed</code>
+            </div>
+        </section>
+
+        <p>This can seem a bit complicated, but the key just translates to <code>input[i] - i + 0x14</code>. We now have enough informations to write our keygen:</p>
+
+        <code class="code-block">#include &ltstdio.h&gt
+#include &ltstring.h&gt
+
+int main(int argc, char *argv[]){
+	(void) argc;
+
+	size_t len = strlen(argv[1]);
+
+	for (unsigned int i = 0; i < len; i++) {
+		printf("%c", argv[1][i] - i + 0x14);
+	}
+
+	return 0;
+}</code>
+        <p>Now let's test it with the username we were given:</p>
+
+        <code class="code-block">$> gcc keygen.c -Wall -Werror -Wextra -o keygen && ./keygen root-me.org > .m.key
+$> ~/Downloads/ch36.bin 
+[!] x64 NASM Keygen-Me
+[A] root-me   
+[?] Login : root-me.org
+
+[\o/] Yeah, good job bro, now write a keygen :)</code>
+
+        <p>Yay, another one crackme pwnd ! Nothing too complicated here, but it can be a bit overwhelming for beginners since the binary is stripped and that the assembly code seems to have been written by hand, not through a compiler.</p>
+        <p>If you have any question do not hesitate to reach out, my emails are open to curious minds ;)</p>
+    </main>
+
+    <footer>
+        <nav>
+            <ul><a href="https://mcaravati.github.io">Home</a></ul>
+        </nav>
+    </footer>
+</body>
+
+</html>

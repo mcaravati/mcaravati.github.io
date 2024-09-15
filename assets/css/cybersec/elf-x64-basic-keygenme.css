@@ -1,0 +1,9 @@
+/* First figure */
+main > section:first-child > figure > img {
+    height: 900px;
+}
+
+/* Second figure */
+main > figure {
+    width: 100%;
+}

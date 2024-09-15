@@ -3,13 +3,12 @@ body {
     --background-color: white;
     background-color: var(--background-color);
     margin: 0;
-    overflow-wrap: break-word;
     font-family: "Commit Mono";
-    text-justify: newspaper;
+    box-sizing: border-box;
 }
 
 body {
-    width: 42rem;
+    max-width: 60rem;
     margin: 0 auto;
     padding: 4rem 2rem;
 }
@@ -84,7 +83,36 @@ main {
     box-shadow: 0.5em 0.75em 0 0 rgba(0, 0, 0, 0.2);
 }
 
+.bordered {
+  border: solid 1px black;
+}
+
 nav {
     display: flex;
     justify-content: center;
+}
+
+nav > ul {
+    padding: 0;
+}
+
+p, li, td, th {
+  font-size: 18px;
+}
+
+figcaption { 
+    padding-top: 1em;
+    text-align: center;
+}
+
+code.code-block {
+    display: block;
+    white-space: pre-wrap;
+    border: 1px black solid;
+    padding: 1rem;
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+p > code {
+    background-color: rgba(0, 0, 0, 0.2);
 }
