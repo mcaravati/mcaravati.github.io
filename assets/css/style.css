@@ -113,6 +113,32 @@ code.code-block {
     background-color: rgba(0, 0, 0, 0.2);
 }
 
-p > code {
+p > code, a > code {
     background-color: rgba(0, 0, 0, 0.2);
+}
+
+article.info {
+    background-color: rgba(0, 255, 0, 0.2);
+}
+
+article.alert {
+    background-color: rgba(255, 0, 0, 0.2);
+}
+
+article.warning {
+    background-color: rgba(255, 255, 0, 0.2);
+}
+
+article > h4.title {
+    font-weight: bold;
+    border-right: solid 1px black;
+    border-bottom: solid 1px black;
+    padding: 0.5rem 1rem;
+    width: fit-content;
+    margin-top: 0;
+}
+
+article > p {
+    padding: 0 1rem;
+    padding-bottom: 0;
 }

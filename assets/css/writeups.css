@@ -17,6 +17,12 @@ section {
     display: flex;
 }
 
+main > figure {
+    margin-right: 0;
+    margin-left: 0;
+
+}
+
 @media (max-width: 512px) {
     section {
         flex-direction: column;

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/writeups.css">
+    <link rel="stylesheet" href="/assets/css/cybersec/elf-x86-no-software-breakpoints.css">
+    <title>ELF x86 - No software breakpoints - Caravati's website</title>
+</head>
+
+<body>
+    <header>
+        <h1><u>Caravati's website</u></h1>
+        <h5>Still looking for a subtitle that does not suck</h5>
+    </header>
+
+    <main>
+        <section>
+            <div>
+                <h2>ELF x86 - No software breakpoints</h2>
+                <h6>This post is part of <a href="/cybersec/about-root-me.html">the Root-Me series</a></h6>
+
+                <p>Welcome back for another writeup ! Let's not waste time with politeness and dive into the challenge:</p>
+
+                <code class="code-block">$> file ch20.bin 
+ch20.bin: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), statically linked, stripped</code>
+
+                <p>Nothing fancy so far, our binary is a stripped ELF, nothing to be afraid of. Let's take a look at the disassembled code of the main function (Figure 1).</p>
+                <p>We can see two system calls, one write to display the challenge's banner (<code>MOV eax, 0x4</code>) and one read to save the user input (<code>MOV eax, 0x3</code>).</p>
+
+                <article class="warning bordered shadowed">
+                    <h4 class="title">A note on system calls</h4>
+                    <p>Be careful kids ! <a href="https://en.wikibooks.org/wiki/X86_Assembly/Interfacing_with_Linux">The system calls codes change whether you use <code>INT 0x80</code> or <code>SYSCALL</code> to invoke you system call</a>, so make sure to know which one you program is using !</p>
+                </article>
+
+                <p>Now if we take a look at the function call, we can notice something fishy: it seems that the program loads two addresses in memory. To be precise, <b>the program loads the addresses marking the beginning and the end of the .text section</b> (the output of the following command has been truncated):</p>
+
+                <code class="code-block">$> readelf -S ./ch20.bin 
+Section Headers:
+  [Nr] Name  Type     Addr     Off    Size  
+  [ 1] .text PROGBITS 08048080 000080 0000a3
+  [ 2] .data PROGBITS 08049124 000124 0000a3</code>
+            </div>
+
+            <figure>
+                <img alt="Graph view of the crackme's decompiled `main` function" src="/assets/images/cybersec/elf-x86-no-software-breakpoints/start.svg" class="shadowed bordered" />
+                <figcaption>Figure 1</figcaption>
+            </figure>
+        </section>
+
+        <p>Now, what does our little crackme want to do with these addresses ? If we look at the function it calls (Figure 2), it seems that the program does a checksum of its .text section using the <code>ROL</code> instruction.</p>
+
+        <section>
+            <figure>
+                <img alt="Graph view of the crackme's only subfunction" src="/assets/images/cybersec/elf-x86-no-software-breakpoints/subfunction01.svg" class="shadowed bordered" />
+                <figcaption>Figure 2</figcaption>
+            </figure>
+
+            <article class="info bordered shadowed">
+                <h4 class="title">What are the ROL / ROR instructions ?</h4>
+                
+                <p>The short answer to this question is: they are non-destructive bit-shift instructions. It kinda works like the rotating discs of a combination lock.</p>
+
+                <figure>
+                    <img src="/assets/images/cybersec/elf-x86-no-software-breakpoints/combination_padlock_wheel.svg" alt="A combination padlock's rotating disc" />
+                    <figcaption>A combination padlock's rotating disc</figcaption>
+                </figure>
+
+                <p>What do I mean by that ? Well, if I have a value <code>0b1000</code> encoded on 4 bits, the <code>1</code> will be destroyed if I do <code>0b1000 << 1</code>, resulting in <code>0b0000</code>.</p>
+                <p><code>ROL</code> and <code>ROR</code> do almost the same, at the exception that the informations that should be destroyed go back to the other side, like this: <code>ROL 0b1000, 0x2</code> gives <code>0x0010</code> (<code>ROL</code> does not take immediate values, but this is for the sake of simplicity).</p>
+            </article>
+        </section>
+
+        <p>Once the checksum computed, the main function <code>XOR</code>s our input byte by byte with some buffer stored in the .data segment (<code>0x8049155</code>). The logic roughly translates to the following pseudocode:</p>
+
+        <code class="code-block">for i in reversed(range(len(data_buffer))):
+    checksum = ror(checksum, 0x1)
+    if user_input[i] ^ data_buffer[i] != (checksum & 0xff):
+        # Break, jump failed</code>
+
+        <p>From what we can understand of the code, the buffer seems to be the result of the flag being <code>XOR</code>ed with the checksum through the main function's <code>ROR</code> loop. We can then take advantage of <a href="https://en.wikipedia.org/wiki/Exclusive_or#Properties"><code>XOR</code>'s involution</a> to fetch the flag !</p>
+
+        <article class="alert bordered shadowed">
+            <h4 class="title">Finding the checksum</h4>
+
+            <p>To find the program's checksum, one might be interested in using a debugger and reading the value directly from the registers during the execution.</p>
+            <p>If you do so, remember the name of the crackme: <b>no software breakpoints !</b> Indeed, since the crackme does a checksum of its whole .text segment, using software breakpoints will tamper with it because <a href="https://www.youtube.com/watch?v=PVnjYgoX_ck">what they do is live-patching the binary</a>.</p>
+            <p>Instead, consider using hardware breakpoints, or just do a static analysis of the binary by dumping the buffer from the .data segment and computing the checksum yourself !</p>
+        </article>
+
+        <p>I won't go further in the writeup since all the key elements have been pointed out, the only thing that is needed now is to build a program to decipher the flag.</p>
+        <p>This challenge was a bit more complicated, with new problems and some exotic CPU instructions, but nothing impossible. It was fun, see you next time ;)</p>
+    </main>
+
+    <footer>
+        <nav>
+            <ul><a href="/">Home</a></ul>
+        </nav>
+    </footer>
+</body>
+
+</html>

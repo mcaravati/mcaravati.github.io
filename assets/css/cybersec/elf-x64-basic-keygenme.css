@@ -3,6 +3,10 @@ main > section:first-child > figure > img {
     height: 900px;
 }
 
+main > section:first-child > figure {
+    margin-right: 0;
+}
+
 /* Second figure */
 main > figure {
     width: 100%;
