@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/writeups.css">
+    <link rel="stylesheet" href="/assets/css/cybersec/elf-arm-crackme-1337.css">
+    <title>ELF ARM - crackme 1337 - Caravati's website</title>
+</head>
+
+<body>
+    <header>
+        <h1><u>Caravati's website</u></h1>
+        <h5>Still looking for a subtitle that does not suck</h5>
+    </header>
+
+    <main>
+        <section>
+            <div>
+                <h2>ELF ARM - crackme 1337</h2>
+                <h6>This post is part of <a href="/cybersec/about-root-me.html">the Root-Me series</a></h6>
+
+                <p>
+                    This is the awkward part where I'm supposed to be greeting you, but I only have so much ways to do so. Anyway, welcome back !
+                </p>
+                <p>
+                    Today, we'll try to solve our first challenged compiled for the ARM architecture ! ARM processors are 32-bits RISC processors, and are really interesting, even if reversing programs compiled for ARM can be a bit difficult.
+                </p>
+
+                <p>This crackme can be solved by only reversing it statically. The program's main and only function is represented in figure 1.</p>
+            </div>
+        </section>
+
+        <figure>
+            <img alt="Graph view of the crackme's main function" src="/assets/images/cybersec/elf-arm-crackme-1337/main.svg" class="shadowed bordered" />
+            <figcaption>Figure 1</figcaption>
+        </figure>
+
+        <section>
+            <div>
+                <p>
+                    OK, listen: this might be a bit intimidating but I swear that this function is no big deal.
+                </p>
+                <p>
+                    Let's take a look at the first block composing the function: we can see the classic ARM function prologue, which creates a new stack frame and saves the frame pointer (FP / r11), intra procedural (IP / r12), link (LR / r14) and program counter (PC / r15) registers on the stack:
+                </p>
+                <code class="code-block">00008290 CPY r12, sp
+00008294 SMTDB sp!,{r4,r11,r12,lr,pc}</code>
+
+		<p>The number of arguments (r0, which was stored in the stack and then loaded in r3) is checked, verifying that the program has at least one argument, before jumping to <code>LAB_000082c0</code>. The <code>LAB_000082c0</code> chunk seems to store <code>0</code> at <code>FP-0x1c</code> and the chunk <code>000082d0</code> executes the function located at <code>0x00008248</code>, with the argument <code>0x20 (32)</code>. Thanks to our friend <code>addr2line</code>, we can see that it's actually a call to <code>xmalloc</code>, allocating the number of bytes passed as an argument.</p>
+		<code class="code-block">$> addr2line -f -e chall9.bin 0x00008248
+xmalloc
+??:?</code>
+            <article class="info bordered shadowed">
+                <h4 class="title">xmalloc ?</h4>
+               	
+		<p>Nowadays, if you want to allocate memory on the heap in a C program, you will probably use the <code>malloc</code> function, while checking that the pointer returned is not <code>NULL</code>, and adapting your program's flow accordingly.<p>
+
+		<p>Well, <code>xmalloc</code> is kind of the same thing, with the exception that it's more of a ride-or-die function, which will terminate your program and display an error message if it fails to allocate memory</p>
+           </article>
+ 
+	   <p>The next code segment seems to be a <code>for</code> loop, which will run until <code>FP-0x1c</code> reaches <code>8</code>. The <code>LAB_000082dc</code>, <code>000082f4</code> and <code>00008320</code> chunks will be executed <code>8</code> time, with the last chunk incrementing <code>FP-0x1c</code> at each iteration. The chunk at <code>LAB_000082dc</code> seems to allocate <code>0x20 (32)</code> bytes on the heap and storing a pointer to this memory zone at <code>(FP-0x20) + ((FP-0x1c) * 4)</code>, with the chunk <code>000082f4</code> filling it with <code>'\n'</code>s using <code>memset (situated at 0x00011fe0)</code></p>
+
+	   <p>The next executed chunk when the loop has stopped is <code>00008338</code>, which puts a <code>0</code> at the end of the first allocated buffer, resets <code>FP-0x1c</code> and stores <code>0x41 ('A')</code> at <code>FP-0x18</code><p>
+
+		<article class="warning bordered shadowed">
+			<h4 class="title">Take a step back</h4>
+			<p>It is often important to take a look at the bigger picture: what happened so far ?</p>
+			<p>Well, the program allocates a 32x32 matrix on the heap, before filling it with newlines (<code>'\n'</code>). But as we saw it, the first allocated array is filled with pointers returned by <code>xmalloc</code>, and as ARM processors are 32-bits, those pointers are also 32-bits, which can also be expressed as <code>32 / 8 = 4 bytes</code> ! Does this ring a bell ?</p>
+
+			<p>From this, we can safely say that the program allocates a 32x8 matrix of characters on the stack !</p>
+		</article>
+
+		<p>The next chunks seem to also be a for loop, with the chunk <code>LAB_00008364</code> filling the fourth column with ASCII characters from <code>0x41 ('A')</code> to <code>0x5f ('_')</code>, and the chunk <code>000083a8</code> putting a null byte (a <code>0</code>) at the end of the string that has just been built.</p>
+
+		<p>So what's with the final chunk structure ? Well to make it quick, the chunks <code>LAB_00008420</code>, <code>LAB_000083d0</code> and <code>LAB_00008414</code> form a <code>for</code> loop iterating over <code>argv[1]</code> and comparing it with the string built earlier.<p>
+
+		<p>If the loop manages to finish, it means that the two strings are equal, and we can see a value loaded from memory (<code>0x8458</code>) in the loop epilogue, at chunk <code>0x00008440</code>. But what is this value ?</p>
+
+	    <code class="code-block">$> llvm-objdump -d ./chall9.bin --start-address=0x00008458 --stop-address=0x0000845c
+
+./chall9.bin:	file format elf32-littlearm
+
+Disassembly of section .text:
+8458: 39 05 00 00  	.word	0x00000539</code>
+
+	    <p>Our good pal objdump shows us a little-endian value in memory, which is <code>1337 (0x539</code>. Remember the challenge's name ? That's what we are looking for ! All we have to do now is to reconstruct the in-memory string: this shouldn't be too hard so that's were I leave you on your own. ;)</p>
+
+	    <p>This challenge was fun, I really liked being able to solve it statically, as I didn't want to set up a VM or an ARM-based computer to be able to run it. I hope my explanations weren't too blurry, do not hesitate to send me an email if you need help. See you in the next one !</p>
+                    </div>
+
+</section>
+            
+
+    </main>
+
+    <footer>
+        <nav>
+            <ul><a href="/">Home</a></ul>
+        </nav>
+    </footer>
+</body>
+
+</html>
